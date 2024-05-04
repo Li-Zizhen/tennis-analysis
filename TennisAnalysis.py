@@ -37,6 +37,7 @@ def getPlayerTotalPointsWon(playerIndex):
             counter = counter + 1
     return counter
 
+# The annotation is at the shot that results in winning the point
 def annotateWinLoseShot():
     player1Based = swtichToPlayer1BasedTable()
     matchWithAnnotation = match.assign(Winmark=0)
@@ -58,6 +59,7 @@ def annotateWinLoseShot():
     return matchWithAnnotation
 
 # annotate length of points in player1's view, positive for player1 and negative for player2
+# The annotation is at the shot that results in winning the point
 def annotateLength():
     player1Based = swtichToPlayer1BasedTable()
     matchWithAnnotation = match.assign(GameLength=0)
@@ -83,6 +85,20 @@ def annotateLength():
             counter = 1
 
     return matchWithAnnotation
+# Break points here are points that one points from winning the game while opponent is serving
+# The annotation is at shot that leads to breakserve opportunities
+# If player1 gets the break points opportunity, that shot will be marked as 1
+# If p..2 gets oppo, that shot .. -1
+def annotateBreakPoints():
+    matchWithAnnotation = match.assign(BreakPoint=0)
+    for i in range(1, matchLength):
+        if ((match.iloc[i, 0] == player2['name']) and (match.iloc[i, 4] >= 3) and (match.iloc[i,4]-match.iloc[i,5]>=1) and (match.iloc[i, 12] == 1)):
+            matchWithAnnotation.loc[i-1, 'BreakPoint'] = 1
+        elif ((match.iloc[i, 0] == player1['name']) and (match.iloc[i, 5] >= 3) and (match.iloc[i,5]-match.iloc[i,4]>=1) and (match.iloc[i, 12] == 1)):
+            matchWithAnnotation.loc[i-1, 'BreakPoint'] = -1
+    return matchWithAnnotation
+
+
 
 # para: [start, end] player's winning chance if the length of point is between this range.
 # return: (winning chance, player's number of wins, opponent's number of wins)
@@ -182,5 +198,8 @@ def storeToPlayer():
 # print(a)
 # print(sum((a['GameLength']<5) & (a['GameLength']>0)))
 # print(sum((-5<a['GameLength']) & (a['GameLength']<0)))
+a = annotateBreakPoints()
+print(a)
+print(sum(a['BreakPoint']))
 storeToPlayer()
 print(player1, player2)
