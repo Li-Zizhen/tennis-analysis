@@ -1,7 +1,12 @@
 import pandas as pd
 import numpy as np
 
-match = pd.read_csv('20211121-M-Tour_Finals-F-Daniil_Medvedev-Alexander_Zverev.csv')
+match = pd.read_csv('20211121-M-Tour_Finals-F-Daniil_Medvedev-Alexander_Zverev.csv', header = None)
+
+num_columns = len(match.columns)
+default_columns = [f'Column{i+1}' for i in range(num_columns)]
+match.columns = default_columns
+
 player1 = {"name":match.iloc[0,0]}
 player2 = {"name":match.iloc[0,1]}
 player = [player1, player2]
@@ -89,14 +94,43 @@ def annotateLength():
 # The annotation is at shot that leads to breakserve opportunities
 # If player1 gets the break points opportunity, that shot will be marked as 1
 # If p..2 gets oppo, that shot .. -1
+# However, if the game continued and become 4:3 this will also be marked.(little bug)
 def annotateBreakPoints():
     matchWithAnnotation = match.assign(BreakPoint=0)
     for i in range(1, matchLength):
-        if ((match.iloc[i, 0] == player2['name']) and (match.iloc[i, 4] >= 3) and (match.iloc[i,4]-match.iloc[i,5]>=1) and (match.iloc[i, 12] == 1)):
-            matchWithAnnotation.loc[i-1, 'BreakPoint'] = 1
-        elif ((match.iloc[i, 0] == player1['name']) and (match.iloc[i, 5] >= 3) and (match.iloc[i,5]-match.iloc[i,4]>=1) and (match.iloc[i, 12] == 1)):
-            matchWithAnnotation.loc[i-1, 'BreakPoint'] = -1
+        if ((match.iloc[i, 5] >= 3) and (match.iloc[i,5]-match.iloc[i,4]>=1) and (match.iloc[i, 12] == 1)):
+            if ((match.iloc[i, 0] == player2['name'])):
+                matchWithAnnotation.loc[i-1, 'BreakPoint'] = 1
+            elif ((match.iloc[i, 0] == player1['name'])):
+                matchWithAnnotation.loc[i-1, 'BreakPoint'] = -1
     return matchWithAnnotation
+
+def numberOfBreakPointsSaved(playerIndex):
+    annotatedMatchWithBP = annotateBreakPoints()
+    annotatedMatchWithWinLose = annotateWinLoseShot()
+    if (playerIndex == 1):
+        numberOfSave = 0
+        for i in range(matchLength):
+            if (annotatedMatchWithBP.loc[i, 'BreakPoint'] == -1):
+                j = 0
+                while (annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == 0):
+                    j = j + 1
+                if ((annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == 1) ):
+                    numberOfSave = numberOfSave + 1
+        return numberOfSave
+
+    if (playerIndex == 2):
+        numberOfSave = 0
+        for i in range(matchLength):
+            if (annotatedMatchWithBP.loc[i, 'BreakPoint']  == 1):
+                j = 0
+                while (annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == 0):
+                    j = j + 1
+                if ((annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == -1)):
+                    numberOfSave = numberOfSave + 1
+        return numberOfSave
+
+
 
 
 
@@ -201,5 +235,6 @@ def storeToPlayer():
 a = annotateBreakPoints()
 print(a)
 print(sum(a['BreakPoint']))
-storeToPlayer()
-print(player1, player2)
+print(numberOfBreakPointsSaved(1))
+# storeToPlayer()
+# print(player1, player2)
