@@ -62,7 +62,25 @@ def annotateWinLoseShot():
             matchWithAnnotation.loc[i , 'Winmark'] = -1
 
     return matchWithAnnotation
+def annotateWinLoseSet():
+    player1Based = swtichToPlayer1BasedTable()
+    matchWithAnnotation = match.assign(SetWinmark=0)
 
+    for i in range(1, matchLength):
+        if (player1Based.iloc[i, 6] == (player1Based.iloc[i-1,6]+1)):
+            matchWithAnnotation.loc[i-1, 'SetWinmark'] = 1
+        if (player1Based.iloc[i, 6] <= (player1Based.iloc[i-1,6]-5)):
+            matchWithAnnotation.loc[i - 1, 'SetWinmark'] = 1
+        if (player1Based.iloc[i, 6] >=player1Based.iloc[i, 7] and (i == matchLength - 1)):
+            matchWithAnnotation.loc[i , 'SetWinmark'] = 1
+        if (player1Based.iloc[i, 7] == (player1Based.iloc[i-1,7]+1)):
+            matchWithAnnotation.loc[i-1, 'SetWinmark'] = -1
+        if (player1Based.iloc[i, 7] <= (player1Based.iloc[i-1,7]-5)):
+            matchWithAnnotation.loc[i - 1, 'SetWinmark'] = -1
+        if (player1Based.iloc[i, 7] >= player1Based.iloc[i, 6] and (i == matchLength - 1)):
+            matchWithAnnotation.loc[i , 'SetWinmark'] = -1
+
+    return matchWithAnnotation
 # annotate length of points in player1's view, positive for player1 and negative for player2
 # The annotation is at the shot that results in winning the point
 def annotateLength():
@@ -107,15 +125,15 @@ def annotateBreakPoints():
 
 def numberOfBreakPointsSaved(playerIndex):
     annotatedMatchWithBP = annotateBreakPoints()
-    annotatedMatchWithWinLose = annotateWinLoseShot()
+    annotatedSetWithWinLose = annotateWinLoseSet()
     if (playerIndex == 1):
         numberOfSave = 0
         for i in range(matchLength):
             if (annotatedMatchWithBP.loc[i, 'BreakPoint'] == -1):
                 j = 0
-                while (annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == 0):
+                while (annotatedSetWithWinLose.loc[i + j, 'SetWinmark'] == 0):
                     j = j + 1
-                if ((annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == 1) ):
+                if ((annotatedSetWithWinLose.loc[i + j, 'SetWinmark'] == 1) ):
                     numberOfSave = numberOfSave + 1
         return numberOfSave
 
@@ -124,14 +142,11 @@ def numberOfBreakPointsSaved(playerIndex):
         for i in range(matchLength):
             if (annotatedMatchWithBP.loc[i, 'BreakPoint']  == 1):
                 j = 0
-                while (annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == 0):
+                while (annotatedSetWithWinLose.loc[i + j, 'SetWinmark'] == 0):
                     j = j + 1
-                if ((annotatedMatchWithWinLose.loc[i + j, 'Winmark'] == -1)):
+                if ((annotatedSetWithWinLose.loc[i + j, 'SetWinmark'] == -1)):
                     numberOfSave = numberOfSave + 1
         return numberOfSave
-
-
-
 
 
 # para: [start, end] player's winning chance if the length of point is between this range.
