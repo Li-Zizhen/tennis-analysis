@@ -31,16 +31,27 @@ def swtichToPlayer1BasedTable():
 
 # playerIndex = 1 -> player1, index=2->player2
 def getPlayerTotalPointsWon(playerIndex):
-    player1Based = swtichToPlayer1BasedTable()
-    counter = 0
-    for i in range(1,matchLength):
-        if (player1Based.iloc[i, 3+playerIndex] == (player1Based.iloc[i-1,3+playerIndex]+1)):
-            counter = counter + 1
-        if (player1Based.iloc[i, 3+playerIndex] == (player1Based.iloc[i-1,3+playerIndex]-3)):
-            counter = counter + 1
-        if (player1Based.iloc[i, 3+playerIndex] == 3 and (i == matchLength - 1)):
-            counter = counter + 1
-    return counter
+    # player1Based = swtichToPlayer1BasedTable()
+    # counter = 0
+    # for i in range(1,matchLength):
+    #     if (player1Based.iloc[i, 3+playerIndex] == (player1Based.iloc[i-1,3+playerIndex]+1)):
+    #         counter = counter + 1
+    #     if (player1Based.iloc[i, 3+playerIndex] <= (player1Based.iloc[i-1,3+playerIndex]-3)):
+    #         counter = counter + 1
+    #     if (playerIndex == 1):
+    #         if (player1Based.iloc[i, 3+playerIndex] >= player1Based.iloc[i, 4+playerIndex] and (i == matchLength - 1)):
+    #             counter = counter + 1
+    #     if (playerIndex == 2):
+    #         if (player1Based.iloc[i, 3 + playerIndex] >= player1Based.iloc[i, 2 + playerIndex] and (i == matchLength - 1)):
+    #             counter = counter + 1
+    # return counter
+    if (playerIndex == 1):
+        return sum(annotateWinLoseShot()['Winmark'] == 1)
+
+
+    if (playerIndex == 2):
+        return sum(annotateWinLoseShot()['Winmark'] == -1)
+
 
 # The annotation is at the shot that results in winning the point
 def annotateWinLoseShot():
@@ -50,15 +61,15 @@ def annotateWinLoseShot():
     for i in range(1, matchLength):
         if (player1Based.iloc[i, 4] == (player1Based.iloc[i-1,4]+1)):
             matchWithAnnotation.loc[i-1, 'Winmark'] = 1
-        if (player1Based.iloc[i, 4] == (player1Based.iloc[i-1,4]-3)):
+        elif ((player1Based.iloc[i, 4] <= (player1Based.iloc[i-1,4]-3)) and (player1Based.iloc[i-1, 4] >  player1Based.iloc[i-1, 5])):
             matchWithAnnotation.loc[i - 1, 'Winmark'] = 1
-        if (player1Based.iloc[i, 4] == 3 and (i == matchLength - 1)):
+        elif (player1Based.iloc[i, 4] >=  player1Based.iloc[i, 5]  and (i == (matchLength - 1))):
             matchWithAnnotation.loc[i , 'Winmark'] = 1
-        if (player1Based.iloc[i, 5] == (player1Based.iloc[i-1,5]+1)):
+        elif (player1Based.iloc[i, 5] == (player1Based.iloc[i-1,5]+1)):
             matchWithAnnotation.loc[i-1, 'Winmark'] = -1
-        if (player1Based.iloc[i, 5] == (player1Based.iloc[i-1,5]-3)):
+        elif ((player1Based.iloc[i, 5] <= (player1Based.iloc[i-1,5]-3)) and (player1Based.iloc[i-1, 4] <  player1Based.iloc[i-1, 5])):
             matchWithAnnotation.loc[i - 1, 'Winmark'] = -1
-        if (player1Based.iloc[i, 5] == 3 and (i == matchLength - 1)):
+        elif (player1Based.iloc[i, 5] >= player1Based.iloc[i, 4] and (i == (matchLength - 1))):
             matchWithAnnotation.loc[i , 'Winmark'] = -1
 
     return matchWithAnnotation
@@ -248,8 +259,9 @@ def storeToPlayer():
 # print(sum((a['GameLength']<5) & (a['GameLength']>0)))
 # print(sum((-5<a['GameLength']) & (a['GameLength']<0)))
 a = annotateBreakPoints()
+b = annotateWinLoseShot()
 print(a)
 print(sum(a['BreakPoint']))
 print(numberOfBreakPointsSaved(1))
-# storeToPlayer()
-# print(player1, player2)
+storeToPlayer()
+print(player1, player2)
