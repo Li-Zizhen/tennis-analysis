@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
-
+import warnings
+import pprint
+warnings.simplefilter(action='ignore', category=FutureWarning)
 match = pd.read_csv('20211121-M-Tour_Finals-F-Daniil_Medvedev-Alexander_Zverev.csv', header = None)
 
 num_columns = len(match.columns)
@@ -134,6 +136,7 @@ def annotateBreakPoints():
                 matchWithAnnotation.loc[i-1, 'BreakPoint'] = -1
     return matchWithAnnotation
 
+# return (number of saved bp, total number of bp faced)
 def numberOfBreakPointsSaved(playerIndex):
     annotatedMatchWithBP = annotateBreakPoints()
     annotatedSetWithWinLose = annotateWinLoseSet()
@@ -146,7 +149,7 @@ def numberOfBreakPointsSaved(playerIndex):
                     j = j + 1
                 if ((annotatedSetWithWinLose.loc[i + j, 'SetWinmark'] == 1) ):
                     numberOfSave = numberOfSave + 1
-        return numberOfSave
+        return numberOfSave, sum(annotatedMatchWithBP['BreakPoint']==-1)
 
     if (playerIndex == 2):
         numberOfSave = 0
@@ -157,7 +160,7 @@ def numberOfBreakPointsSaved(playerIndex):
                     j = j + 1
                 if ((annotatedSetWithWinLose.loc[i + j, 'SetWinmark'] == -1)):
                     numberOfSave = numberOfSave + 1
-        return numberOfSave
+        return numberOfSave, sum(annotatedMatchWithBP['BreakPoint']==1)
 
 
 # para: [start, end] player's winning chance if the length of point is between this range.
@@ -229,7 +232,6 @@ def getNumberOfSecondServe(playerIndex):
 def getNumberOfAcesAndDoubleFault(playerIndex):
     return (sum((match.iloc[:, 0] == player[playerIndex - 1]["name"]) & (match.iloc[:,21] == 1)),
             sum((match.iloc[:, 0] == player[playerIndex - 1]["name"]) & (match.iloc[:,21] == 2) & (match.iloc[:,12] == 2)))
-
 def storeToPlayer():
     player1["totalPointsWon"] = getPlayerTotalPointsWon(1)
     player2["totalPointsWon"] = getPlayerTotalPointsWon(2)
@@ -253,15 +255,9 @@ def storeToPlayer():
     player1["ShotTolerance5-8"] = getShotTolerance(5,8,1)
     player1["ShotTolerance9-12"] = getShotTolerance(9,12,1)
     player1["ShotTolerance13+"] = getShotTolerance(13,matchLength,1)
+    player1["NumberOfBreakPointSaved,Faced"] = numberOfBreakPointsSaved(1)
+    player2["NumberOfBreakPointSaved,Faced"] = numberOfBreakPointsSaved(2)
 
-# a = annotateLength()
-# print(a)
-# print(sum((a['GameLength']<5) & (a['GameLength']>0)))
-# print(sum((-5<a['GameLength']) & (a['GameLength']<0)))
-a = annotateBreakPoints()
-b = annotateWinLoseShot()
-print(a)
-print(sum(a['BreakPoint']))
-print(numberOfBreakPointsSaved(1))
-storeToPlayer()
-print(player1, player2)
+# storeToPlayer()
+# pprint.pprint(player1)
+# pprint.pprint(player2)
