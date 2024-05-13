@@ -16,7 +16,6 @@ firstServeSummary.loc[1]['Info'] = "Count"
 firstServeSummary.loc[2]['Info'] = "Present"
 firstServeSummary.loc[3]['Info'] = "Win%"
 # As usual the player1 is the player who serve the first, and in the model match it is Daniil
-playerIndex = 1
 secondServeSummary = firstServeSummary.copy()
 def getServeDirectionCount(playerIndex, serveNum):
     def helper(a, b):
@@ -66,13 +65,19 @@ def getServeDirectionCountWinChance(playerIndex, serveNum):
         else:
             result.append(0)
     return result
+def showServeAnalysis(playerIndex):
+    firstServeSummary.iloc[0][1:7] = getServeDirectionCount(playerIndex, 1)
+    firstServeSummary.iloc[1][1:7] = getServeDirectionPercentage(playerIndex, 1)
+    firstServeSummary.iloc[2][1:7] = getServeDirectionCountWinChance(playerIndex, 1)
+    secondServeSummary.iloc[0][1:7] = getServeDirectionCount(playerIndex, 2)
+    secondServeSummary.iloc[1][1:7] = getServeDirectionPercentage(playerIndex, 2)
+    secondServeSummary.iloc[2][1:7] = getServeDirectionCountWinChance(playerIndex, 2)
+    print(player[playerIndex-1]["name"]+":")
+    print('------------first serve analysis')
+    print(firstServeSummary)
+    print('------------second serve analysis')
+    print(secondServeSummary)
 
-firstServeSummary.iloc[0][1:7] = getServeDirectionCount(playerIndex, 1)
-firstServeSummary.iloc[1][1:7] = getServeDirectionPercentage(playerIndex, 1)
-firstServeSummary.iloc[2][1:7] = getServeDirectionCountWinChance(playerIndex, 1)
-secondServeSummary.iloc[0][1:7] = getServeDirectionCount(playerIndex, 2)
-secondServeSummary.iloc[1][1:7] = getServeDirectionPercentage(playerIndex, 2)
-secondServeSummary.iloc[2][1:7] = getServeDirectionCountWinChance(playerIndex, 2)
-print(firstServeSummary)
-print(secondServeSummary)
+showServeAnalysis(1)
+showServeAnalysis(2)
 
