@@ -1,59 +1,46 @@
 import pandas as pd
-import numpy as np
 import warnings
-import pprint
 from TennisAnalysisGeneralInfo import getNumberOfAcesAndDoubleFault, getNumberofWinner, getPlayerTotalPointsWon, \
     annotateWinLoseShot, matchLength
-from TennisAnalysisGeneralInfo import player1
-from TennisAnalysisGeneralInfo import player2
 from TennisAnalysisGeneralInfo import match
 from TennisAnalysisGeneralInfo import player
+from util import annotateBFhands, annotateWE
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-firstServeSummary = pd.DataFrame(columns=['Info','ADLeft','ADMiddle', 'ADRight', 'DueLeft', 'DueMiddle','DueRight'], index=range(1, 4))
-firstServeSummary.loc[1]['Info'] = "Count"
-firstServeSummary.loc[2]['Info'] = "Present"
-firstServeSummary.loc[3]['Info'] = "Win%"
+firstReturnSummary = pd.DataFrame(columns=['ad court', 'middle court', 'deuce court'], index=range(1, 4))
+firstReturnSummary.loc[1]['Info'] = "Count"
+firstReturnSummary.loc[2]['Info'] = "Present"
+firstReturnSummary.loc[3]['Info'] = "Win%"
+secondReturnSummary = firstReturnSummary.copy()
+
 # As usual the player1 is the player who serve the first, and in the model match it is Daniil
-playerIndex = 1
-secondServeSummary = firstServeSummary.copy()
-def getServeDirectionCount(playerIndex, serveNum):
-    def helper(a, b):
-        if serveNum == 2:
-            return sum((match.iloc[:, 0] == player[playerIndex - 1]["name"]) & (match.iloc[:, 13] == a) & (
-                    match.iloc[:, 15] == b) & (match.iloc[:, 12] == serveNum))
-        if serveNum == 1:
-            return sum((match.iloc[:, 0] == player[playerIndex - 1]["name"]) & (match.iloc[:, 13] == a) & (
-                    match.iloc[:, 15] == b) & (match.iloc[:, 12] == serveNum) & (match.iloc[:, 21] != 2))
 
-    return [helper(3,4),
-            helper(3,5),
-            helper(3,6),
-            helper(1,6),
-            helper(1,5),
-            helper(1,4)]
-def getServeDirectionPercentage(playerIndex, serveNum):
-    adCourt = [x / sum(getServeDirectionCount(playerIndex, serveNum)[0:3]) for x in getServeDirectionCount(playerIndex, serveNum)[0:3]]
-    dueCourt = [x / sum(getServeDirectionCount(playerIndex, serveNum)[3:6]) for x in getServeDirectionCount(playerIndex, serveNum)[3:6]]
-    return adCourt + dueCourt
+def filter(colIndex, targetValue):
+    return (match.iloc[:, colIndex] == targetValue)
+def getReturnDirectionCount(playerIndex, serveNum):
+    def helper(a):
+            return sum((match.iloc[:, 0] == player[playerIndex - 1]["name"])
+                       & filter(16, a) & filter(12, 3)
+                       & filter(23, serveNum))
+    return [helper(a) for a in range(3, 0, -1)]
+def getReturnDirectionPercentage(playerIndex, serveNum):
+    serveDirctionPercentage= [x / sum(getReturnDirectionCount(playerIndex, serveNum))
+                              for x in getReturnDirectionCount(playerIndex, serveNum)]
+    return serveDirctionPercentage
 
-
-def getServeDirectionCountWinChance(playerIndex, serveNum):
-    def helper(a, b):
-        if serveNum == 2:
-            return ((match.iloc[:, 0] == player[playerIndex - 1]["name"]) & (match.iloc[:, 13] == a) & (
-                    match.iloc[:, 15] == b) & (match.iloc[:, 12] == serveNum))
-        if serveNum == 1:
-            return ((match.iloc[:, 0] == player[playerIndex - 1]["name"]) & (match.iloc[:, 13] == a) & (
-                    match.iloc[:, 15] == b) & (match.iloc[:, 12] == serveNum) & (match.iloc[:, 21] != 2))
+def getReturnDirectionCountWinChance(playerIndex, serveNum):
+    def helper(a):
+            return ((match.iloc[:, 0] == player[playerIndex - 1]["name"])
+                       & filter(16, a) & filter(12, 3)
+                       & filter(23, serveNum))
     result = []
-    for i, j in [[3,4], [3,5],[3,6],[1,6],[1,5],[1,4]]:
+    for j in [3,2,1]:
         numberOfWin = 0
-        successfulFirstServeIndex = helper(i,j)
+        returnIndex = helper(j)
         annotatedWithWinLose = annotateWinLoseShot()
         for i in range(matchLength):
-            if(successfulFirstServeIndex[i] == True):
+            if(returnIndex[i] == True):
                 j = 0
                 while (annotatedWithWinLose.loc[i+j,'Winmark'] == 0):
                     j = j+1
@@ -61,18 +48,52 @@ def getServeDirectionCountWinChance(playerIndex, serveNum):
                     numberOfWin = numberOfWin + 1
                 if ((annotatedWithWinLose.loc[i+j,'Winmark'] == -1) and (playerIndex == 2)):
                     numberOfWin = numberOfWin + 1
-        if (sum(successfulFirstServeIndex) != 0):
-            result.append(numberOfWin / sum(successfulFirstServeIndex))
+        if (sum(returnIndex) != 0):
+            result.append(numberOfWin / sum(returnIndex))
         else:
             result.append(0)
     return result
+def showReturnAnalysis(playerIndex):
+    firstReturnSummary.iloc[0][0:3] = getReturnDirectionCount(playerIndex, 1)
+    firstReturnSummary.iloc[1][0:3] = getReturnDirectionPercentage(playerIndex, 1)
+    firstReturnSummary.iloc[2][0:3] = getReturnDirectionCountWinChance(playerIndex, 1)
+    secondReturnSummary.iloc[0][0:3] = getReturnDirectionCount(playerIndex, 2)
+    secondReturnSummary.iloc[1][0:3] = getReturnDirectionPercentage(playerIndex, 2)
+    secondReturnSummary.iloc[2][0:3] = getReturnDirectionCountWinChance(playerIndex, 2)
+    print(player[playerIndex - 1]["name"] + ":")
+    print('------------first return analysis')
+    print(firstReturnSummary)
+    print('------------second return analysis')
+    print(secondReturnSummary)
+# showReturnAnalysis(1)
+# showReturnAnalysis(2)
+firstReturnWEHands = pd.DataFrame(columns=['p1 deuce winner', 'p1 deuce error', 'p1 ad winner', 'p1 ad error','Winner&Errors', 'p2 deuce winner', 'p2 deuce error', 'p2 ad winner', 'p2 ad error'], index=range(1, 5))
+firstReturnWEHands.loc[1]['Winner&Errors'] = "1st-Forehand"
+firstReturnWEHands.loc[2]['Winner&Errors'] = "1st-Backhand"
+firstReturnWEHands.loc[3]['Winner&Errors'] = "2nd-Forehand"
+firstReturnWEHands.loc[4]['Winner&Errors'] = "2nd-Backhand"
 
-firstServeSummary.iloc[0][1:7] = getServeDirectionCount(playerIndex, 1)
-firstServeSummary.iloc[1][1:7] = getServeDirectionPercentage(playerIndex, 1)
-firstServeSummary.iloc[2][1:7] = getServeDirectionCountWinChance(playerIndex, 1)
-secondServeSummary.iloc[0][1:7] = getServeDirectionCount(playerIndex, 2)
-secondServeSummary.iloc[1][1:7] = getServeDirectionPercentage(playerIndex, 2)
-secondServeSummary.iloc[2][1:7] = getServeDirectionCountWinChance(playerIndex, 2)
-print(firstServeSummary)
-print(secondServeSummary)
+# court: ad 3, mid 2, deuce 1
+# we: winner 1, error -1
+# numServe: return first serve 1, re.. 2
+# BFhands fh 0, bh, 1
+def getWEByHandsAndServeNum(court, we, serveNum, BFhands, playerIndex):
+    matchWithHandsAnnotation = annotateBFhands(match)
+    matchWithWEAnnotation = annotateWE(match)
+    return sum((filter(16, court) & (matchWithWEAnnotation.loc[:, 'WE'] == we)
+               & (match.iloc[:, 0] == player[playerIndex - 1]["name"]) & filter(23, serveNum)
+               & filter(12, 3) & (matchWithHandsAnnotation.loc[:, 'BFhands'] == BFhands)))
+
+# print(getWEByHandsAndServeNum(3, 3,1, 1, 2))
+for playerIndex in [1,2]:
+    print(player[playerIndex-1]["name"])
+    for serveNum in [1,2]:
+        print("  serveNum" + str(serveNum))
+        for hands in [0,1]:
+            hand = "forehand" if hands==0 else "backhand"
+            print("    hands: "+ hand)
+            for court in [1,2,3]:
+                for we in [1, -1]:
+                    print("      ", getWEByHandsAndServeNum(court, we, serveNum, hands, playerIndex) ,end = "")
+            print("")
 
