@@ -24,7 +24,7 @@ def shiftColumnByIndex(df, column_index, n):
 
     return df
 
-
+# 0 is forehand, 1 is backhand
 def annotateBFhands(df):
     matchWithAnnotation = df.assign(BFhands=0)
     condition1 = (df.iloc[:, 14] >= 0) & (df.iloc[:, 14] < 20)

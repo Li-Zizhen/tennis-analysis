@@ -49,7 +49,7 @@ showReturnAnalysis(2)
 # we: winner 1, error -1
 # BFhands fh 0, bh, 1
 
-def getWEByHandsandType(BFhands, playerIndex):
+def getWEByHandsandApproach(BFhands, playerIndex):
     matchWithHandsAnnotation = annotateBFhands(match)
     matchWithWEAnnotation = annotateWE(match)
     return sum((matchWithWEAnnotation.loc[:, 'WE'] == 1)
@@ -62,15 +62,6 @@ def getWEByHandsandType(BFhands, playerIndex):
                & (matchWithHandsAnnotation.loc[:, 'BFhands'] == BFhands)
                & (filter(20, 1)))
 
-# print(getWEByHandsAndServeNum(3, 3,1, 1, 2))
-# for playerIndex in [1,2]:
-#     print(player[playerIndex-1]["name"])
-#     for hands in [0, 1]:
-#         hand = "forehand" if hands==0 else "backhand"
-#         print("    hands: "+ hand)
-#         for we in [1, -1]:
-#             print("         ", "winner " if we == 1 else "Error ", getWEByHandsandType(we, hands, playerIndex) ,end = "  ")
-#         print("")
 
 # after watching the raw data, I found the winner only exist 1 for alex. tennis abstract or analytics may be wrong.
 def getWEByHands(BFhands, playerIndex):
@@ -84,7 +75,25 @@ def getWEByHands(BFhands, playerIndex):
                )
     return helper(1), helper(-1)
 
-
+def getWEByHandsandVolley(BFhands, playerIndex):
+    matchWithWEAnnotation = annotateWE(match)
+    def helper(we):
+        bfhand = 26 if BFhands == 0 else 5
+        return sum((matchWithWEAnnotation.loc[:, 'WE'] == we)
+               & (match.iloc[:, 0] == player[playerIndex - 1]["name"])
+               & (filter(12, 4))
+                & (filter(14, bfhand))
+               )
+    return helper(1), helper(-1)
+def getWEByHandsandType(shotType1, shotType2, playerIndex):
+    matchWithWEAnnotation = annotateWE(match)
+    def helper(we):
+        return sum((matchWithWEAnnotation.loc[:, 'WE'] == we)
+               & (match.iloc[:, 0] == player[playerIndex - 1]["name"])
+               & (filter(12, 4))
+                & (filter(14, shotType1) | filter(14, shotType2))
+               )
+    return helper(1), helper(-1)
 data = {
     'Player1Winners': [0]*10,
     'Player1Errors': [0]*10,
@@ -93,28 +102,31 @@ data = {
     'Player2Errors': [0] * 10,
 }
 vallyShotTypeAna = pd.DataFrame(data)
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[2], ['Player1Winners', 'Player1Errors']] = getWEByHandsandType(0, 1)
-# print(getWEByHandsandType(0, 1))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[2], ['Player2Winners', 'Player2Errors']] = getWEByHandsandType(0, 2)
-# print(getWEByHandsandType(0, 2))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[3], ['Player1Winners', 'Player1Errors']] = getWEByHandsandType(1, 1)
-# print(getWEByHandsandType(1, 1))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[3], ['Player2Winners', 'Player2Errors']] = getWEByHandsandType(1, 2)
-# print(getWEByHandsandType(1, 2))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[0], ['Player1Winners', 'Player1Errors']] = getWEByHands(1, 1)
-# print(getWEByHandsandType(1, 1))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[0], ['Player2Winners', 'Player2Errors']] = getWEByHands(1, 2)
-# print(getWEByHandsandType(1, 2))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[1], ['Player1Winners', 'Player1Errors']] = getWEByHands(0, 1)
-# print(getWEByHandsandType(0, 1))
-# vallyShotTypeAna.loc[vallyShotTypeAna.index[1], ['Player2Winners', 'Player2Errors']] = getWEByHands(0, 2)
-# print(getWEByHandsandType(0, 2))
+for i, (hand, playerNum) in enumerate([(0, 1), (0, 2), (1, 1), (1, 2)]):
+    vallyShotTypeAna.loc[vallyShotTypeAna.index[2 + i // 2], [f'Player{playerNum}Winners', f'Player{playerNum}Errors']] = getWEByHandsandApproach(hand, playerNum)
+    # print(getWEByHandsandApproach(hand, playerNum))
 
-for i, (hand, player) in enumerate([(0, 1), (0, 2), (1, 1), (1, 2)]):
-    vallyShotTypeAna.loc[vallyShotTypeAna.index[2 + i // 2], [f'Player{player}Winners', f'Player{player}Errors']] = getWEByHandsandType(hand, player)
-    print(getWEByHandsandType(hand, player))
+for i, (hand, playerNum) in enumerate([(0, 1), (0, 2), (1, 1), (1, 2)]):
+    vallyShotTypeAna.loc[vallyShotTypeAna.index[i // 2], [f'Player{playerNum}Winners', f'Player{playerNum}Errors']] = getWEByHands(hand, playerNum)
+    # print(getWEByHands(hand, playerNum))
+for i, (hand, playerNum) in enumerate([(0, 1), (0, 2), (1, 1), (1, 2)]):
+    vallyShotTypeAna.loc[vallyShotTypeAna.index[4+ i // 2], [f'Player{playerNum}Winners', f'Player{playerNum}Errors']] = getWEByHandsandVolley(hand, playerNum)
+    # print(getWEByHands(hand, playerNum))
+for i, (shotType1,shotType2, playerNum) in enumerate([(7,28, 1), (7, 28, 2), (9, 30, 1), (9, 30, 2)]):
+    vallyShotTypeAna.loc[vallyShotTypeAna.index[6+ i // 2], [f'Player{playerNum}Winners', f'Player{playerNum}Errors']] = getWEByHandsandType(shotType1,shotType2, playerNum)
+    # print(getWEByHands(hand, playerNum))
 
-for i, (hand, player) in enumerate([(1, 1), (1, 2), (0, 1), (0, 2)]):
-    vallyShotTypeAna.loc[vallyShotTypeAna.index[i // 2], [f'Player{player}Winners', f'Player{player}Errors']] = getWEByHands(hand, player)
-    print(getWEByHandsandType(hand, player))
+vallyShotTypeAna.loc[vallyShotTypeAna.index[8], [f'Player1Winners',
+                                                          f'Player1Errors']] = getWEByHandsandType(11, 32,
+                                                                                                             1)
+vallyShotTypeAna.loc[vallyShotTypeAna.index[8], [f'Player2Winners',
+                                                 f'Player2Errors']] = getWEByHandsandType(11, 32,
+                                                                                                    2)
+# vallyShotTypeAna = vallyShotTypeAna.astype(int)
+vallyShotTypeAna.iloc[9, 0:2] = vallyShotTypeAna.iloc[:-1, 0:2].sum()
+vallyShotTypeAna.iloc[9, 3:5] = (vallyShotTypeAna.iloc[:-1, 3:5].sum())
+integer_columns = ['Player1Winners', 'Player1Errors', 'Player2Winners','Player2Errors']
+vallyShotTypeAna[integer_columns] = vallyShotTypeAna[integer_columns].astype(int)
+
 print(vallyShotTypeAna)
+
