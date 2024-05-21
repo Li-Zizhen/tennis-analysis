@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import warnings
 import pprint
+
+from util import annotateWE
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 match = pd.read_csv('20211121-M-Tour_Finals-F-Daniil_Medvedev-Alexander_Zverev.csv', header = None)
 
@@ -176,6 +179,17 @@ def getShotTolerance(start, end, playerIndex):
         opponentNumberOfWin = sum((matchWithLength['GameLength'] <= end) & (start <= matchWithLength['GameLength']))
         return playerNumberOfWin, opponentNumberOfWin
 
+# the opponent below is from player1's perspective.
+def getShotToleranceBreakDown(start, end):
+    matchWithLength = annotateLength()
+    annotatedMatch = annotateWE(matchWithLength)
+    opponentNumberOfWinByWinner = sum((-end <= annotatedMatch['GameLength']) & (annotatedMatch['GameLength'] <= -start) & (annotatedMatch['WE'] == 1) )
+    opponentNumberOfWinByOppError = sum((-end <= annotatedMatch['GameLength']) & (annotatedMatch['GameLength'] <= -start) & (annotatedMatch['WE'] == -1) )
+
+    playerNumberOfWinByWinner = sum((annotatedMatch['GameLength'] <= end) & (start <= annotatedMatch['GameLength'])  & (annotatedMatch['WE'] == 1))
+    playerNumberOfWinByOppError= sum((annotatedMatch['GameLength'] <= end) & (start <= annotatedMatch['GameLength'])  & (annotatedMatch['WE'] == -1))
+    return playerNumberOfWinByWinner, playerNumberOfWinByOppError, opponentNumberOfWinByWinner, opponentNumberOfWinByOppError
+
 
 # The index of successful first serve.
 def getSuccessfulFirstServeIndex(playerIndex):
@@ -255,9 +269,19 @@ def storeToPlayer():
     player1["ShotTolerance5-8"] = getShotTolerance(5,8,1)
     player1["ShotTolerance9-12"] = getShotTolerance(9,12,1)
     player1["ShotTolerance13+"] = getShotTolerance(13,matchLength,1)
+
+    # player2["ShotTolerance1-4"] = getShotTolerance(1,4,2)
+    # player2["ShotTolerance5-8"] = getShotTolerance(5,8,2)
+    # player2["ShotTolerance9-12"] = getShotTolerance(9,12,2)
+    # player2["ShotTolerance13+"] = getShotTolerance(13,matchLength,2)
+
     player1["NumberOfBreakPointSaved,Faced"] = numberOfBreakPointsSaved(1)
     player2["NumberOfBreakPointSaved,Faced"] = numberOfBreakPointsSaved(2)
 
 # storeToPlayer()
 # pprint.pprint(player1)
 # pprint.pprint(player2)
+print(getShotToleranceBreakDown(1, 4))
+print(getShotToleranceBreakDown(5, 8))
+print(getShotToleranceBreakDown(9, 12))
+print(getShotToleranceBreakDown(13, matchLength))
