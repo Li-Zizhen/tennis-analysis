@@ -41,3 +41,5 @@ def annotateWE(df): # annoate winner or forced/unforced error
     condition2 = (df.iloc[:, 21] == 3) | (df.iloc[:, 21] == 4)
     matchWithAnnotation.loc[condition2, 'WE'] = -1
     return matchWithAnnotation
+
+# need annoate with col: first return, second return, vally length,

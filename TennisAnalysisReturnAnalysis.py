@@ -8,7 +8,7 @@ from util import annotateBFhands, annotateWE
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-firstReturnSummary = pd.DataFrame(columns=['ad court', 'middle court', 'deuce court'], index=range(1, 4))
+firstReturnSummary = pd.DataFrame(columns=[ 'ad court', 'middle court', 'deuce court', 'Info'], index=range(1, 4))
 firstReturnSummary.loc[1]['Info'] = "Count"
 firstReturnSummary.loc[2]['Info'] = "Present"
 firstReturnSummary.loc[3]['Info'] = "Win%"
@@ -65,13 +65,12 @@ def showReturnAnalysis(playerIndex):
     print(firstReturnSummary)
     print('------------second return analysis')
     print(secondReturnSummary)
-# showReturnAnalysis(1)
-# showReturnAnalysis(2)
-firstReturnWEHands = pd.DataFrame(columns=['p1 deuce winner', 'p1 deuce error', 'p1 ad winner', 'p1 ad error','Winner&Errors', 'p2 deuce winner', 'p2 deuce error', 'p2 ad winner', 'p2 ad error'], index=range(1, 5))
-firstReturnWEHands.loc[1]['Winner&Errors'] = "1st-Forehand"
-firstReturnWEHands.loc[2]['Winner&Errors'] = "1st-Backhand"
-firstReturnWEHands.loc[3]['Winner&Errors'] = "2nd-Forehand"
-firstReturnWEHands.loc[4]['Winner&Errors'] = "2nd-Backhand"
+
+# firstReturnWEHands = pd.DataFrame(columns=['p1 deuce winner', 'p1 deuce error', 'p1 ad winner', 'p1 ad error','Winner&Errors', 'p2 deuce winner', 'p2 deuce error', 'p2 ad winner', 'p2 ad error'], index=range(1, 5))
+# firstReturnWEHands.loc[1]['Winner&Errors'] = "1st-Forehand"
+# firstReturnWEHands.loc[2]['Winner&Errors'] = "1st-Backhand"
+# firstReturnWEHands.loc[3]['Winner&Errors'] = "2nd-Forehand"
+# firstReturnWEHands.loc[4]['Winner&Errors'] = "2nd-Backhand"
 
 # court: ad 3, mid 2, deuce 1
 # we: winner 1, error -1
@@ -83,7 +82,8 @@ def getWEByHandsAndServeNum(court, we, serveNum, BFhands, playerIndex):
     return sum((filter(16, court) & (matchWithWEAnnotation.loc[:, 'WE'] == we)
                & (match.iloc[:, 0] == player[playerIndex - 1]["name"]) & filter(23, serveNum)
                & filter(12, 3) & (matchWithHandsAnnotation.loc[:, 'BFhands'] == BFhands)))
-
+showReturnAnalysis(1)
+showReturnAnalysis(2)
 # print(getWEByHandsAndServeNum(3, 3,1, 1, 2))
 for playerIndex in [1,2]:
     print(player[playerIndex-1]["name"])
@@ -94,6 +94,6 @@ for playerIndex in [1,2]:
             print("    hands: "+ hand)
             for court in [1,2,3]:
                 for we in [1, -1]:
-                    print("      ", getWEByHandsAndServeNum(court, we, serveNum, hands, playerIndex) ,end = "")
+                    print("winner " if we == 1 else "Error ", getWEByHandsAndServeNum(court, we, serveNum, hands, playerIndex) ,end = "  ")
             print("")
 
