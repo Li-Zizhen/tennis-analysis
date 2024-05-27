@@ -1,13 +1,22 @@
+import pickle
+
 import pandas as pd
 import numpy as np
 import warnings
 import pprint
 from TennisAnalysisGeneralInfo import getNumberOfAcesAndDoubleFault, getNumberofWinner, getPlayerTotalPointsWon, \
     annotateWinLoseShot, matchLength
-from TennisAnalysisGeneralInfo import player1
-from TennisAnalysisGeneralInfo import player2
+
 from TennisAnalysisGeneralInfo import match
-from TennisAnalysisGeneralInfo import player
+try:
+    with open('player_data.pkl', 'rb') as file:
+        player1, player2 = pickle.load(file)
+except FileNotFoundError:
+    from TennisAnalysisGeneralInfo import storeToPlayer
+    storeToPlayer()
+    with open('player_data.pkl', 'rb') as file:
+        player1, player2 = pickle.load(file)
+player = [player1, player2]
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 

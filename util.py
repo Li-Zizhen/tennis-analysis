@@ -34,9 +34,9 @@ def annotateBFhands(df):
     return matchWithAnnotation
 
 # Winner 1, error -1
-def annotateWE(df): # annoate winner or forced/unforced error
+def annotateWE(df): # annoate winner(inclusing ace) or forced/unforced error(including double fault)
     matchWithAnnotation = df.assign(WE=0)
-    condition1 = (df.iloc[:, 21] == 5)
+    condition1 = (df.iloc[:, 21] == 5) |(df.iloc[:, 21] == 1) |((df.iloc[:,21] == 2) & (df.iloc[:,12] == 2))
     matchWithAnnotation.loc[condition1, 'WE'] = 1
     condition2 = (df.iloc[:, 21] == 3) | (df.iloc[:, 21] == 4)
     matchWithAnnotation.loc[condition2, 'WE'] = -1

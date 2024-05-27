@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import warnings
 import pprint
+import pickle
 
 from util import annotateWE
 
@@ -271,17 +272,23 @@ def storeToPlayer():
     player1["ShotTolerance13+"] = getShotTolerance(13,matchLength,1)
 
     # player2["ShotTolerance1-4"] = getShotTolerance(1,4,2)
+
     # player2["ShotTolerance5-8"] = getShotTolerance(5,8,2)
     # player2["ShotTolerance9-12"] = getShotTolerance(9,12,2)
     # player2["ShotTolerance13+"] = getShotTolerance(13,matchLength,2)
 
     player1["NumberOfBreakPointSaved,Faced"] = numberOfBreakPointsSaved(1)
     player2["NumberOfBreakPointSaved,Faced"] = numberOfBreakPointsSaved(2)
+    with open('player_data.pkl', 'wb') as file:
+        pickle.dump((player1, player2), file)
+
 
 # storeToPlayer()
+# with open('player_data.pkl', 'rb') as file:
+#     player1, player2 = pickle.load(file)
 # pprint.pprint(player1)
 # pprint.pprint(player2)
-print(getShotToleranceBreakDown(1, 4))
-print(getShotToleranceBreakDown(5, 8))
-print(getShotToleranceBreakDown(9, 12))
-print(getShotToleranceBreakDown(13, matchLength))
+# print(getShotToleranceBreakDown(1, 4))
+# print(getShotToleranceBreakDown(5, 8))
+# print(getShotToleranceBreakDown(9, 12))
+# print(getShotToleranceBreakDown(13, matchLength))

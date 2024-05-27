@@ -1,12 +1,25 @@
-import pandas as pd
-import numpy as np
-import warnings
+import pickle
 import pprint
+
+import pandas as pd
+import warnings
 from TennisAnalysisGeneralInfo import getNumberOfAcesAndDoubleFault, getNumberofWinner, getPlayerTotalPointsWon
-from TennisAnalysisGeneralInfo import player1
-from TennisAnalysisGeneralInfo import player2
+
 from TennisAnalysisGeneralInfo import match
-from TennisAnalysisGeneralInfo import player
+# from TennisAnalysisGeneralInfo import player
+
+# Below code is use to cache the result from tennis general info
+try:
+    with open('player_data.pkl', 'rb') as file:
+        player1, player2 = pickle.load(file)
+except FileNotFoundError:
+    from TennisAnalysisGeneralInfo import storeToPlayer
+    storeToPlayer()
+    with open('player_data.pkl', 'rb') as file:
+        player1, player2 = pickle.load(file)
+player = [player1, player2]
+pprint.pprint(player1)
+pprint.pprint(player2)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 summary = pd.DataFrame(columns=['Player1Winner','Player1Error', 'Info', 'Player2Winner', 'Player2Errors'], index=range(1, 7))
